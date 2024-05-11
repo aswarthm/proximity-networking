@@ -1,0 +1,100 @@
+{
+  "Client": {
+    "9393848484": {
+      "password": "abcd",
+      "phno": "9393848484",
+      "name": "Alice",
+      "url": "https://www.linkedin.com/in/alice/",
+      "project_idea": "Very nice idea. Only need smart coder to implement. We will do 50/50 money",
+      "technicalExpertise": "Java, Android, Firebase",
+      "money": 69
+    },
+    "9393848485": {
+      "password": "efgh",
+      "phno": "9393848485",
+      "name": "Bob",
+      "url": "https://www.linkedin.com/in/bob/",
+      "project_idea": "Innovative project. Looking for a dedicated coder. Profit sharing negotiable.",
+      "technicalExpertise": "Python, Django, PostgreSQL",
+      "money": 100
+    },
+    "9393848486": {
+      "password": "ijkl",
+      "phno": "9393848486",
+      "name": "Charlie",
+      "url": "https://www.linkedin.com/in/charlie/",
+      "project_idea": "Exciting startup idea. Need a coder to bring it to life. Equity offered.",
+      "technicalExpertise": "JavaScript, React, Node.js",
+      "money": 120
+    },
+    "9393848487": {
+      "password": "mnop",
+      "phno": "9393848487",
+      "name": "David",
+      "url": "https://www.linkedin.com/in/david/",
+      "project_idea": "Revolutionary app idea. Need a skilled coder. Willing to share profits.",
+      "technicalExpertise": "C#, .NET, SQL Server",
+      "money": 150
+    }
+  },
+  "Developer": {
+    "1231231232": {
+      "password": "abcd",
+      "phno": "1231231232",
+      "name": "John Doe",
+      "url": "https://www.linkedin.com/in/johndoe/",
+      "experience": " Worked on Android  app to track user location",
+      "technicalExpertise": "Java, Android, Firebase"
+    },
+    "1231231233": {
+      "password": "efgh",
+      "phno": "1231231233",
+      "name": "Jane Smith",
+      "url": "https://www.linkedin.com/in/janesmith/",
+      "experience": "Developed a web application using Django and PostgreSQL",
+      "technicalExpertise": "Python, Django, PostgreSQL"
+    },
+    "1231231234": {
+      "password": "ijkl",
+      "phno": "1231231234",
+      "name": "Bob Ross",
+      "url": "https://www.linkedin.com/in/bobross/",
+      "experience": "Built a full-stack application using JavaScript, React, and Node.js",
+      "technicalExpertise": "JavaScript, React, Node.js"
+    },
+    "1231231235": {
+      "password": "qrst",
+      "phno": "1231231235",
+      "name": "Emma Watson",
+      "url": "https://www.linkedin.com/in/emmawatson/",
+      "experience": "Developed a web application using C#, .NET and SQL Server",
+      "technicalExpertise": "C#, .NET, SQL Server"
+    }
+  },
+  "matches": [
+    {
+      "c_accept": false,
+      "c_id": "9393848484",
+      "d_accept": false,
+      "d_id": "1231231232"
+    },
+    {
+      "c_accept": true,
+      "c_id": "9393848485",
+      "d_accept": true,
+      "d_id": "1231231233"
+    },
+    {
+      "c_accept": true,
+      "c_id": "9393848486",
+      "d_accept": false,
+      "d_id": "1231231234"
+    },
+    {
+      "c_accept": false,
+      "c_id": "9393848487",
+      "d_accept": true,
+      "d_id": "1231231235"
+    }
+  ]
+}

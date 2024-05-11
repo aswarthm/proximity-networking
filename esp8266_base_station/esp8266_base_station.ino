@@ -13,26 +13,27 @@ void receivedCallback(uint32_t from, String &msg) {
 }
 
 void newConnectionCallback(uint32_t nodeId) {
-  Serial.printf("--> startHere: New Connection, nodeId = %u\n", nodeId);
+  // Serial.printf("--> startHere: New Connection, nodeId = %u\n", nodeId);
+  Serial.println(String(nodeId));
+  String msg = "";
+  msg += "3177229801 with 317722980345 2";
+  mesh.sendBroadcast(msg);
 }
 
 void changedConnectionCallback() {
   Serial.printf("\nChanged connections\n");
   std::list<uint32_t> nodeList = mesh.getNodeList();
 
-  Serial.print("Number of nodes: " );
+  Serial.print("Number of nodes: ");
   Serial.println(nodeList.size());
   Serial.print("Nodes: ");
-  while(nodeList.size() != 0){
+  while (nodeList.size() != 0) {
     Serial.print(nodeList.front());
     Serial.print(", ");
     nodeList.pop_front();
   }
   Serial.println("Connection topology");
   Serial.println(mesh.subConnectionJson(1));
-  String msg = "";
-  msg += "3177229801 with 317722980345 2";
-  mesh.sendBroadcast(msg);
 }
 
 
@@ -43,18 +44,18 @@ void setup() {
   mesh.setDebugMsgTypes(ERROR | STARTUP);  // set before init() so that you can see startup messages
 
   mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
-  mesh.onReceive(&receivedCallback);
+  // mesh.onReceive(&receivedCallback);
   mesh.onNewConnection(&newConnectionCallback);
-  mesh.onChangedConnections(&changedConnectionCallback);
+  // mesh.onChangedConnections(&changedConnectionCallback);
 
   Serial.println("Base station start");
   std::list<uint32_t> nodeList = mesh.getNodeList();
 
-  Serial.println(nodeList.size());
+  // Serial.println(nodeList.size());
 
 
 
-  Serial.println(" ");
+  // Serial.println(" ");
 }
 
 void loop() {
