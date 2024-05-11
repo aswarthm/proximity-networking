@@ -1,0 +1,5 @@
+google-cloud-aiplatform
+firebase-admin
+geopy
+twilio
+web3
