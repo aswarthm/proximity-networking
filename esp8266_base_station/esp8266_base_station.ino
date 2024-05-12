@@ -15,9 +15,9 @@ void receivedCallback(uint32_t from, String &msg) {
 void newConnectionCallback(uint32_t nodeId) {
   // Serial.printf("--> startHere: New Connection, nodeId = %u\n", nodeId);
   Serial.println(String(nodeId));
-  String msg = "";
-  msg += "3177229801 with 317722980345 2";
-  mesh.sendBroadcast(msg);
+  // String msg = "";
+  // msg += "3177229801 with 317722980345 2";
+  // mesh.sendBroadcast(msg);
 }
 
 void changedConnectionCallback() {
@@ -48,7 +48,7 @@ void setup() {
   mesh.onNewConnection(&newConnectionCallback);
   // mesh.onChangedConnections(&changedConnectionCallback);
 
-  Serial.println("Base station start");
+  // Serial.println("Base station start");
   std::list<uint32_t> nodeList = mesh.getNodeList();
 
   // Serial.println(nodeList.size());
@@ -60,4 +60,8 @@ void setup() {
 
 void loop() {
   mesh.update();
+  if(Serial.available() > 0){
+    String msg = Serial.readString();
+    mesh.sendBroadcast(msg);
+  }
 }

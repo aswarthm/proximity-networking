@@ -35,7 +35,10 @@ void receivedCallback(uint32_t from, String &msg) {
   Serial.println(lol);
   if (msg.indexOf(nodeID) >= 0) {
     Serial.println("matched");
-    ledStatus = msg.charAt(msg.length() - 1) - '0';
+    ledStatus = msg.charAt(msg.length() - 3) - '0';
+    Serial.print("LED Status ");
+    Serial.print(msg.charAt(msg.length() - 3));
+    Serial.println(ledStatus);
   }
 }
 

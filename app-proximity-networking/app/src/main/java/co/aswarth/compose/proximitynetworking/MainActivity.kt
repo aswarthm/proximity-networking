@@ -92,12 +92,12 @@ class MainActivity : ComponentActivity() {
                 2 - main screen
                  */
 
-                val curState = remember { mutableIntStateOf(2) }
+                val curState = remember { mutableIntStateOf(0) }
 
-                val userType = remember { mutableStateOf("Developer") }
+                val userType = remember { mutableStateOf("") }
 
-                val phoneNumber = remember { mutableStateOf("1231231232") }
-                val password = remember { mutableStateOf("abcd") }
+                val phoneNumber = remember { mutableStateOf("") }
+                val password = remember { mutableStateOf("") }
 
                 val projDesc = remember { mutableStateOf("") }
                 val techRequirements = remember { mutableStateOf("") }
@@ -299,12 +299,12 @@ class MainActivity : ComponentActivity() {
                 if (snapshot.value == null) {
                     return
                 }
-                val value = snapshot.value as HashMap<*, *>
+                val value = snapshot.value as List<*>
                 Log.d("debugsms", "value $value")
                 matches.clear()
                 for (i in value) {
                     Log.d("debugsms", "i $i")
-                    val map = i.value as HashMap<*, *>
+                    val map = i as HashMap<*, *>
                     val c_accept = map["c_accept"] as Boolean
                     val c_id = map["c_id"] as String
                     val d_accept = map["d_accept"] as Boolean
