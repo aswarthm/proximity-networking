@@ -9,7 +9,7 @@ import re
 import json
 import time
 
-# from genAI import getPromptFromData, getGeminiResponse
+from genAI import getGeminiResponse
 
 cred_obj = firebase_admin.credentials.Certificate('./fbconfig.json')
 default_app = firebase_admin.initialize_app(cred_obj, {
@@ -18,14 +18,30 @@ default_app = firebase_admin.initialize_app(cred_obj, {
 
 
 matches = [] # required for threading
-def check_match(client_data, dev_data):
+def check_match (client_id, client_data, dev_id, dev_data):
+    prompt = "look at the profiles of the developer and client and check if the 2 profiles are a match. respond with yes or no. do not explain"
     
+    prompt += "Client requirements: \n"
+    prompt += client_data["technicalExpertise"] + "\n"
+
+    prompt += "Developer skills: \n"
+    prompt += dev_data["technicalExpertise"]
     
+    ans = getGeminiResponse(prompt)
+    print(ans, "**************\n")
+    if "yes" in ans.lower():
+        matches.append((client_id, dev_id))
 
-    # if match, append to matches
-    
 
-
+def getPhoneNumberFromId(id, data):
+    for ph_no, client_data in data["Client"].items():
+        if client_data["nodeID"] == id:
+            return ph_no
+        
+    for ph_no, dev_data in data["Developer"].items():
+        if dev_data["nodeID"] == id:
+            return ph_no
+        
 
 ser = Serial(port="/dev/tty")
 
@@ -36,17 +52,21 @@ while True:
     if ser.in_waiting:
         id = ser.readline() # PUT \n at the end of string in esp32
         
-        clients = data["clients"]
-        developers = data["developers"]
+        key = getPhoneNumberFromId(id, data)
+        if key is None:
+            print("KEY NOT FOUND")
+
+        clients = data["Client"]
+        developers = data["Developer"]
         
         threads = []
-        if id in data["clients"]:
-            for dev_id in developers:
-                threads.append(Thread(target=check_match), args=[data["clients"][id], data["developers"][dev_id]])
+        if key in clients:
+            for dev_key in developers:
+                threads.append(Thread(target=check_match, args=[key, clients[key], dev_key, developers[dev_key]]))
             
-        else:
-            for client_id in clients:
-                threads.append(Thread(target=check_match), args=[data["clients"][client_id], data["developers"][id]])
+        elif key in developers:
+            for client_key in clients:
+                threads.append(Thread(target=check_match, args=[client_key, clients[client_key], key, developers[key]]))
 
         for t in threads:
             t.start()
@@ -54,27 +74,29 @@ while True:
         for t in threads:
             t.join()
 
+        print("Matches: ", matches)
         for match in matches:
             ref = db.reference("/matches")
             ref.push({
-                "client_id": match[0],
-                "dev_id": match[1],
-                "client_confirmed": 0,
-                "dev_confirmed":0
+                "c_id": match[0],
+                "d_id": match[1],
+                "c_accept": False,
+                "d_accept": False
             })
 
-        continue
+        
+    ref = db.reference("/")
+    data = ref.get() # Gets full firebase
 
-
-    for match in data["matches"]:
-        if match["client_confirmed"] and match["dev_confirmed"]:
-            ser.write(f"{match["client_id"]}, {match["dev_id"]}", 0)
+    for k, match in data["matches"].items():
+        if match["c_accept"] and match["d_accept"]:
+            ser.write(f"{match['client_id']}, {match['dev_id']}, 2")
             continue 
 
-        if match["client_confirmed"] or match["dev_confirmed"]:
-            ser.write(f"{match["client_id"]}, {match["dev_id"]}", 1)
+        if match["c_accept"] or match["d_accept"]:
+            ser.write(f"{match['client_id']}, {match['dev_id']}, 1")
             continue
 
-        ser.write(f"{match["client_id"]}, {match["dev_id"]}", 2)
+        ser.write(f"{match['client_id']}, {match['dev_id']}, 0")
 
     time.sleep(1)
