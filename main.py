@@ -46,57 +46,60 @@ def getPhoneNumberFromId(id, data):
 ser = Serial(port="/dev/tty")
 
 while True:
-    ref = db.reference("/")
-    data = ref.get() # Gets full firebase
+    try:
+        ref = db.reference("/")
+        data = ref.get() # Gets full firebase
 
-    if ser.in_waiting:
-        id = ser.readline() # PUT \n at the end of string in esp32
-        
-        key = getPhoneNumberFromId(id, data)
-        if key is None:
-            print("KEY NOT FOUND")
-
-        clients = data["Client"]
-        developers = data["Developer"]
-        
-        threads = []
-        if key in clients:
-            for dev_key in developers:
-                threads.append(Thread(target=check_match, args=[key, clients[key], dev_key, developers[dev_key]]))
+        if ser.in_waiting:
+            id = ser.readline() # PUT \n at the end of string in esp32
             
-        elif key in developers:
-            for client_key in clients:
-                threads.append(Thread(target=check_match, args=[client_key, clients[client_key], key, developers[key]]))
+            key = getPhoneNumberFromId(id, data)
+            if key is None:
+                print("KEY NOT FOUND")
 
-        for t in threads:
-            t.start()
+            clients = data["Client"]
+            developers = data["Developer"]
+            
+            threads = []
+            if key in clients:
+                for dev_key in developers:
+                    threads.append(Thread(target=check_match, args=[key, clients[key], dev_key, developers[dev_key]]))
+                
+            elif key in developers:
+                for client_key in clients:
+                    threads.append(Thread(target=check_match, args=[client_key, clients[client_key], key, developers[key]]))
 
-        for t in threads:
-            t.join()
+            for t in threads:
+                t.start()
 
-        print("Matches: ", matches)
-        for match in matches:
-            ref = db.reference("/matches")
-            ref.push({
-                "c_id": match[0],
-                "d_id": match[1],
-                "c_accept": False,
-                "d_accept": False
-            })
+            for t in threads:
+                t.join()
 
-        
-    ref = db.reference("/")
-    data = ref.get() # Gets full firebase
+            print("Matches: ", matches)
+            for match in matches:
+                ref = db.reference("/matches")
+                ref.push({
+                    "c_id": match[0],
+                    "d_id": match[1],
+                    "c_accept": False,
+                    "d_accept": False
+                })
 
-    for k, match in data["matches"].items():
-        if match["c_accept"] and match["d_accept"]:
-            ser.write(f"{match['client_id']}, {match['dev_id']}, 2")
-            continue 
+            
+        ref = db.reference("/")
+        data = ref.get() # Gets full firebase
 
-        if match["c_accept"] or match["d_accept"]:
-            ser.write(f"{match['client_id']}, {match['dev_id']}, 1")
-            continue
+        for k, match in data["matches"].items():
+            if match["c_accept"] and match["d_accept"]:
+                ser.write(f"{match['client_id']}, {match['dev_id']}, 2")
+                continue 
 
-        ser.write(f"{match['client_id']}, {match['dev_id']}, 0")
+            if match["c_accept"] or match["d_accept"]:
+                ser.write(f"{match['client_id']}, {match['dev_id']}, 1")
+                continue
+
+            ser.write(f"{match['client_id']}, {match['dev_id']}, 0")
+    except:
+        pass
 
     time.sleep(1)
