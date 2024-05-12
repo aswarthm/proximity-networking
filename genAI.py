@@ -20,9 +20,3 @@ def getGeminiResponse(prompt : str) -> str:
     response = chat.send_message(prompt, generation_config=config).candidates[0].content.parts[0].text
     return response
 
-
-
-if __name__ == "__main__":
-    prompt = createPrompt(1,2)
-
-    print(getGeminiResponse(prompt))
