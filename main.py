@@ -43,17 +43,15 @@ def getPhoneNumberFromId(id, data):
             return ph_no
         
 
-# ser = Serial(port="/dev/tty")
-
+ser = Serial(port="/dev/tty")
 
 while True:
     ref = db.reference("/")
     data = ref.get() # Gets full firebase
 
-    # if ser.in_waiting:
-    if True:
-        # id = ser.readline() # PUT \n at the end of string in esp32
-        id = 70   # HAS TO BE INT
+    if ser.in_waiting:
+        id = ser.readline() # PUT \n at the end of string in esp32
+        
         key = getPhoneNumberFromId(id, data)
         if key is None:
             print("KEY NOT FOUND")
@@ -82,8 +80,8 @@ while True:
             ref.push({
                 "c_id": match[0],
                 "d_id": match[1],
-                "c_accept": 0,
-                "d_accept":0
+                "c_accept": False,
+                "d_accept": False
             })
 
         
