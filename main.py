@@ -9,6 +9,8 @@ import re
 import json
 import time
 
+import requests
+
 from genAI import getGeminiResponse
 
 cred_obj = firebase_admin.credentials.Certificate('./fbconfig.json')
@@ -41,20 +43,24 @@ def getPhoneNumberFromId(id, data):
     for ph_no, dev_data in data["Developer"].items():
         if dev_data["nodeID"] == id:
             return ph_no
-        
+    return None
 
-ser = Serial(port="/dev/tty")
+ser = Serial(port="COM3")
+
+
 
 while True:
     ref = db.reference("/")
     data = ref.get() # Gets full firebase
 
     if ser.in_waiting:
-        id = ser.readline() # PUT \n at the end of string in esp32
         
+        id = ser.readline().decode('utf-8').strip() # PUT \n at the end of string in esp32
+        print("NODE JOINED NET", id)
         key = getPhoneNumberFromId(id, data)
         if key is None:
             print("KEY NOT FOUND")
+            continue
 
         clients = data["Client"]
         developers = data["Developer"]
@@ -77,26 +83,57 @@ while True:
         print("Matches: ", matches)
         for match in matches:
             ref = db.reference("/matches")
-            ref.push({
+            try:
+                mx = ref.get()
+                print("MX", mx)
+                index = len(mx)
+                mx.append({
                 "c_id": match[0],
                 "d_id": match[1],
                 "c_accept": False,
                 "d_accept": False
             })
+                ref.set(set(mx))
+            except:
+                mx = [{
+                "c_id": match[0],
+                "d_id": match[1],
+                "c_accept": False,
+                "d_accept": False
+            }]
+                ref.set(mx)
+        matches.clear()
 
-        
     ref = db.reference("/")
     data = ref.get() # Gets full firebase
+    # print("hi", data["matches"])
+    for match in data["matches"]:
+        print(match)
+        client_phone = match['c_id']
+        dev_phone = match['d_id']
 
-    for k, match in data["matches"].items():
+        client_id = data["Client"][client_phone]["nodeID"]
+        dev_id = data["Developer"][dev_phone]["nodeID"]
+
+
         if match["c_accept"] and match["d_accept"]:
-            ser.write(f"{match['client_id']}, {match['dev_id']}, 2")
+            print(client_id, dev_id, 3)
+            aaa = f"{client_id}, {dev_id}, 2\r\n"
+
+            ser.write(aaa.encode())
             continue 
 
         if match["c_accept"] or match["d_accept"]:
-            ser.write(f"{match['client_id']}, {match['dev_id']}, 1")
+            print(client_id, dev_id, 2)
+            aaa = f"{client_id}, {dev_id}, 3\r\n"
+            ser.write(aaa.encode())
             continue
 
-        ser.write(f"{match['client_id']}, {match['dev_id']}, 0")
+        print(client_id, dev_id, 1)
+        aaa = f"{client_id}, {dev_id}, 1\r\n"
+
+        ser.write(aaa.encode())
+        
+
 
     time.sleep(1)
