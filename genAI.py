@@ -21,13 +21,6 @@ def getGeminiResponse(prompt : str) -> str:
     return response
 
 
-def createPrompt(client_data, dev_data):
-
-
-    return "HELLO"
-
-
-
 
 if __name__ == "__main__":
     prompt = createPrompt(1,2)

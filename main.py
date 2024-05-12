@@ -9,7 +9,7 @@ import re
 import json
 import time
 
-# from genAI import getPromptFromData, getGeminiResponse
+from genAI import getGeminiResponse
 
 cred_obj = firebase_admin.credentials.Certificate('./fbconfig.json')
 default_app = firebase_admin.initialize_app(cred_obj, {
@@ -18,8 +18,20 @@ default_app = firebase_admin.initialize_app(cred_obj, {
 
 
 matches = [] # required for threading
-def check_match(client_data, dev_data):
+def check_match (client_id, client_data, dev_id, dev_data):
+    prompt = "look at the profiles of the developer and client and check if the 2 profiles are a match. respond with yes or no. do not explain"
     
+    prompt += "Client requirements: \n"
+    prompt += client_data
+
+    prompt += "Developer details: \n"
+    prompt += dev_data
+    
+    ans = getGeminiResponse(prompt)
+    print(ans)
+    if "yes" in ans:
+        matches.append(client_id, dev_id)
+        
     
 
     # if match, append to matches
@@ -42,11 +54,11 @@ while True:
         threads = []
         if id in data["clients"]:
             for dev_id in developers:
-                threads.append(Thread(target=check_match), args=[data["clients"][id], data["developers"][dev_id]])
+                threads.append(Thread(target=check_match), args=[id, data["clients"][id], dev_id, data["developers"][dev_id]])
             
         else:
             for client_id in clients:
-                threads.append(Thread(target=check_match), args=[data["clients"][client_id], data["developers"][id]])
+                threads.append(Thread(target=check_match), args=[client_id, data["clients"][client_id], id, data["developers"][id]])
 
         for t in threads:
             t.start()
