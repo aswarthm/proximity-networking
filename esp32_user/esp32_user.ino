@@ -59,7 +59,7 @@ void setup() {
   mesh.setDebugMsgTypes(ERROR | STARTUP);  // set before init() so that you can see startup messages
 
   mesh.init(MESH_PREFIX, MESH_PASSWORD, MESH_PORT);
-  nodeID = mesh.getNodeId();
+  nodeID = String(mesh.getNodeId());
   Serial.println("Connected to mesh with nodeID " + nodeID);
 
   mesh.onReceive(&receivedCallback);
