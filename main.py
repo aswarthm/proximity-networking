@@ -9,6 +9,8 @@ import re
 import json
 import time
 
+import requests
+
 from genAI import getGeminiResponse
 
 cred_obj = firebase_admin.credentials.Certificate('./fbconfig.json')
@@ -41,65 +43,97 @@ def getPhoneNumberFromId(id, data):
     for ph_no, dev_data in data["Developer"].items():
         if dev_data["nodeID"] == id:
             return ph_no
-        
+    return None
 
-ser = Serial(port="/dev/tty")
+ser = Serial(port="COM3")
+
+
 
 while True:
-    try:
-        ref = db.reference("/")
-        data = ref.get() # Gets full firebase
+    ref = db.reference("/")
+    data = ref.get() # Gets full firebase
 
-        if ser.in_waiting:
-            id = ser.readline() # PUT \n at the end of string in esp32
+    if ser.in_waiting:
+        
+        id = ser.readline().decode('utf-8').strip() # PUT \n at the end of string in esp32
+        print("NODE JOINED NET", id)
+        key = getPhoneNumberFromId(id, data)
+        if key is None:
+            print("KEY NOT FOUND")
+            continue
+
+        clients = data["Client"]
+        developers = data["Developer"]
+        
+        threads = []
+        if key in clients:
+            for dev_key in developers:
+                threads.append(Thread(target=check_match, args=[key, clients[key], dev_key, developers[dev_key]]))
             
-            key = getPhoneNumberFromId(id, data)
-            if key is None:
-                print("KEY NOT FOUND")
+        elif key in developers:
+            for client_key in clients:
+                threads.append(Thread(target=check_match, args=[client_key, clients[client_key], key, developers[key]]))
 
-            clients = data["Client"]
-            developers = data["Developer"]
-            
-            threads = []
-            if key in clients:
-                for dev_key in developers:
-                    threads.append(Thread(target=check_match, args=[key, clients[key], dev_key, developers[dev_key]]))
-                
-            elif key in developers:
-                for client_key in clients:
-                    threads.append(Thread(target=check_match, args=[client_key, clients[client_key], key, developers[key]]))
+        for t in threads:
+            t.start()
 
-            for t in threads:
-                t.start()
+        for t in threads:
+            t.join()
 
-            for t in threads:
-                t.join()
+        print("Matches: ", matches)
+        for match in matches:
+            ref = db.reference("/matches")
+            try:
+                mx = ref.get()
+                print("MX", mx)
+                index = len(mx)
+                mx.append({
+                "c_id": match[0],
+                "d_id": match[1],
+                "c_accept": False,
+                "d_accept": False
+            })
+                ref.set(set(mx))
+            except:
+                mx = [{
+                "c_id": match[0],
+                "d_id": match[1],
+                "c_accept": False,
+                "d_accept": False
+            }]
+                ref.set(mx)
+        matches.clear()
 
-            print("Matches: ", matches)
-            for match in matches:
-                ref = db.reference("/matches")
-                ref.push({
-                    "c_id": match[0],
-                    "d_id": match[1],
-                    "c_accept": False,
-                    "d_accept": False
-                })
+    ref = db.reference("/")
+    data = ref.get() # Gets full firebase
+    # print("hi", data["matches"])
+    for match in data["matches"]:
+        print(match)
+        client_phone = match['c_id']
+        dev_phone = match['d_id']
 
-            
-        ref = db.reference("/")
-        data = ref.get() # Gets full firebase
+        client_id = data["Client"][client_phone]["nodeID"]
+        dev_id = data["Developer"][dev_phone]["nodeID"]
 
-        for k, match in data["matches"].items():
-            if match["c_accept"] and match["d_accept"]:
-                ser.write(f"{match['client_id']}, {match['dev_id']}, 2")
-                continue 
 
-            if match["c_accept"] or match["d_accept"]:
-                ser.write(f"{match['client_id']}, {match['dev_id']}, 1")
-                continue
+        if match["c_accept"] and match["d_accept"]:
+            print(client_id, dev_id, 3)
+            aaa = f"{client_id}, {dev_id}, 2\r\n"
 
-            ser.write(f"{match['client_id']}, {match['dev_id']}, 0")
-    except:
-        pass
+            ser.write(aaa.encode())
+            continue 
+
+        if match["c_accept"] or match["d_accept"]:
+            print(client_id, dev_id, 2)
+            aaa = f"{client_id}, {dev_id}, 3\r\n"
+            ser.write(aaa.encode())
+            continue
+
+        print(client_id, dev_id, 1)
+        aaa = f"{client_id}, {dev_id}, 1\r\n"
+
+        ser.write(aaa.encode())
+        
+
 
     time.sleep(1)
