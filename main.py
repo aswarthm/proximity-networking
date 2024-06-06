@@ -47,7 +47,9 @@ def getPhoneNumberFromId(id, data):
 
 ser = Serial(port="COM3")
 
-
+def send_notification():
+    requests.post("https://ntfy.sh/developer_matchmaking", 
+    data="Match found".encode(encoding='utf-8'))
 
 while True:
     ref = db.reference("/")
@@ -81,6 +83,8 @@ while True:
             t.join()
 
         print("Matches: ", matches)
+        if matches:
+            send_notification()
         for match in matches:
             ref = db.reference("/matches")
             try:
